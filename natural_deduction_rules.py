@@ -9,18 +9,15 @@ subgoals = []
 
 class Theorem(object):
 
-    def __init__(self, assumptions, conclusion, bounding_variables=[]):
+    def __init__(self, assumptions, conclusion):
 
         super(Theorem, self).__init__()
         self.assumptions = assumptions
         self.conclusion = conclusion
-        self.bounding_variables = bounding_variables
 
     def __str__(self):
 
         str_rep = ''
-        if len(self.bounding_variables) != 0:
-            str_rep = str_rep + ', '.join(map(str, self.bounding_variables)) + ' scope:\n\n'
 
         for i in range(len(self.assumptions)):
             str_rep = str_rep + str(i + 1) + '. ' + str(self.assumptions[i]) + '\n'
@@ -38,11 +35,15 @@ def conjunction_introduction(theorem):
 
     subgoals.remove(theorem)
 
-    new_subgoal_1 = Theorem(theorem.assumptions, theorem.conclusion.fst_operand, theorem.bounding_variables)
-    new_subgoal_2 = Theorem(theorem.assumptions, theorem.conclusion.snd_operand, theorem.bounding_variables)
+    new_subgoal_1 = Theorem(theorem.assumptions, 
+                            theorem.conclusion.fst_operand)
+
+    new_subgoal_2 = Theorem(theorem.assumptions, 
+                            theorem.conclusion.snd_operand)
     
     subgoals.append(new_subgoal_1)
     subgoals.append(new_subgoal_2)
+
     return True
 
 
@@ -53,6 +54,7 @@ def conjunction_elimination_left(theorem, assumption):
         return False
 
     theorem.assumptions.append(assumption.fst_operand)
+
     return True
 
 
@@ -62,6 +64,7 @@ def conjunction_elimination_right(theorem, assumption):
         return False
 
     theorem.assumptions.append(assumption.snd_operand)
+
     return True
 
     
@@ -76,9 +79,6 @@ def disjunction_introduction_left(theorem):
     new_subgoal = Theorem(theorem.assumptions, theorem.conclusion.fst_operand)
     subgoals.append(new_subgoal)
 
-    main_subgoal = Theorem(theorem.assumptions + [theorem.conclusion.fst_operand], theorem.conclusion)
-    subgoals.append(main_subgoal)
-
     return True
 
 
@@ -92,11 +92,6 @@ def disjunction_introduction_right(theorem):
 
     new_subgoal = Theorem(theorem.assumptions, theorem.conclusion.snd_operand)
     subgoals.append(new_subgoal)
-
-    subgoals.append(theorem.assumptions + [theorem.conclusion.snd_operand], theorem.conclusion)
-   
-    main_subgoal = Theorem(theorem.assumptions + [theorem.conclusion.snd_operand], theorem.conclusion)
-    subgoals.append(main_subgoal)
 
     return True
 
@@ -194,16 +189,13 @@ def universal_introduction(theorem):
 
     subgoals.remove(theorem)
 
-    new_bounding_variables = theorem.bounding_variables
-    arbitrary_variable = Variable('arbitrary_X')
-
-    new_bounding_variables.append(arbitrary_variable)
+    arbitrary_variable = Variable('X_arbitrary')
 
     forall_formula = theorem.conclusion
     
     new_subgoal = Theorem(theorem.assumptions,
-                          forall_formula.sub_formula.substitute(forall_formula.variable, arbitrary_variable),
-                          new_bounding_variables)
+                          forall_formula.sub_formula.substitute(
+                                forall_formula.variable, arbitrary_variable))
 
     subgoals.append(new_subgoal)
     return True
@@ -243,17 +235,14 @@ def existential_elimination(theorem, assumption):
     if not isinstance(assumption, Exists):
         return False
 
-    new_bounding_variables = list(theorem.bounding_variables)
-    arbitrary_variable = Variable('arbitrary_X')
-
-    new_bounding_variables.append(arbitrary_variable)
+    arbitrary_variable = Variable('X_arbitrary')
 
     new_assumptions = list(theorem.assumptions)
     new_assumptions.remove(assumption)
     new_assumptions.append(assumption.sub_formula.substitute(assumption.variable, arbitrary_variable))
 
     subgoals.remove(theorem)
-    subgoals.append(Theorem(new_assumptions, theorem.conclusion, new_bounding_variables))
+    subgoals.append(Theorem(new_assumptions, theorem.conclusion))
 
 
     return True

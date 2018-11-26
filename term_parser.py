@@ -10,12 +10,14 @@ def parse_term(text):
     tokens = (['VARIABLE', 'FUNCTION_SYMBOL', 'COMMA', 'LPAREN', 'RPAREN'])
 
     def t_VARIABLE(t):
-        r'[A-Z][A-Z0-9]*'
+
+        r'[A-Z][A-Za-z0-9_]*'
         t.value = Variable(t.value)
         return t
 
 
     def t_FUNCTION_SYMBOL(t):
+
         r'[a-z][a-z0-9]*'
         return t
 
@@ -62,8 +64,10 @@ def parse_term(text):
 
     lexer = ply.lex.lex()
     parser = ply.yacc.yacc()
+
     try:
         return parser.parse(text, lexer=lexer)
+
     except ValueError as err:
         print(err)
         return []
